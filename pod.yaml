@@ -6,14 +6,14 @@ metadata:
     app: env-test
 spec:
     containers:
-    - name: env-test-container
+    -   name: env-test-container
         image: itselavia/dynamic-update-env
         envFrom:
         - configMapRef:
-        name: env-vars
+          name: env-vars
         volumeMounts:
         - mountPath: /config
-        name: env-volume
+          name: env-volume
     volumes:
     - name: env-volume
       configMap:
