@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/fsnotify/fsnotify"
 )
@@ -31,14 +32,17 @@ func reloadEnvVars() {
 	}
 	for _, file := range files {
 		key := file.Name()
-		filename := configDir + key
-		value, err := ioutil.ReadFile(filename)
-		if err != nil || string(value) == "" {
-			fmt.Println("Unable to read env variable: ", configDir+file.Name())
-			continue
+		if !strings.HasPrefix(key, "..") {
+			filename := configDir + key
+			value, err := ioutil.ReadFile(filename)
+			if err != nil || string(value) == "" {
+				fmt.Println("Unable to read env variable: ", filename)
+				continue
+			}
+			fmt.Println("Reloading key: ", key, " with value: ", string(value))
+			os.Setenv(key, string(value))
 		}
-		fmt.Println("Reloading key: ", key, " with value: ", string(value))
-		os.Setenv(key, string(value))
+
 	}
 }
 
