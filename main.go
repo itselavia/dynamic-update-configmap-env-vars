@@ -10,6 +10,7 @@ import (
 	"github.com/fsnotify/fsnotify"
 )
 
+// Handler function to return the environment value of the key given in URL paramater 'var'
 func getEnvValue(w http.ResponseWriter, req *http.Request) {
 	envVar, ok := req.URL.Query()["var"]
 	if !ok {
@@ -18,10 +19,10 @@ func getEnvValue(w http.ResponseWriter, req *http.Request) {
 	}
 
 	value := os.Getenv(envVar[0])
-
 	fmt.Fprintf(w, value+"\n")
 }
 
+// reloads the enviroment variables from the mounted /config path
 func reloadEnvVars() {
 
 	configDir := "/config/"
@@ -36,13 +37,11 @@ func reloadEnvVars() {
 			filename := configDir + key
 			value, err := ioutil.ReadFile(filename)
 			if err != nil || string(value) == "" {
-				fmt.Println("Unable to read env variable: ", filename)
 				continue
+			} else {
+				os.Setenv(key, string(value))
 			}
-			fmt.Println("Reloading key: ", key, " with value: ", string(value))
-			os.Setenv(key, string(value))
 		}
-
 	}
 }
 
@@ -54,14 +53,15 @@ func main() {
 	}
 	defer watcher.Close()
 
+	// watcher will monitor the files in a background goroutine
 	go func() {
 		for {
 			select {
-			case event, ok := <-watcher.Events:
+			// reload the environment variables whenever changes are made in the /config directory
+			case _, ok := <-watcher.Events:
 				if !ok {
 					return
 				}
-				fmt.Println("event:", event)
 				reloadEnvVars()
 			case err, ok := <-watcher.Errors:
 				if !ok {
@@ -72,6 +72,7 @@ func main() {
 		}
 	}()
 
+	// monitor the /config directory
 	err = watcher.Add("/config/")
 	if err != nil {
 		fmt.Println("error adding directory to Watcher", err)
