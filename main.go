@@ -37,6 +37,7 @@ func reloadEnvVars() {
 			fmt.Println("Unable to read env variable: ", configDir+file.Name())
 			continue
 		}
+		fmt.Println("Reloading key: ", key, " with value: ", string(value))
 		os.Setenv(key, string(value))
 	}
 }
