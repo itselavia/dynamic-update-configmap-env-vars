@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+    name: env-vars
+data:
+    KEY1: VAL1
+    KEY2: VAL2
