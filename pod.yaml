@@ -5,16 +5,16 @@ metadata:
   labels:
     app: env-test
 spec:
-    containers:
+  containers:
     - name: env-test-container
       image: itselavia/dynamic-update-env
       envFrom:
-      - configMapRef:
-          name: env-vars
+        - configMapRef:
+            name: env-vars
       volumeMounts:
-      - mountPath: /config
-        name: env-volume
-    volumes:
+        - mountPath: /config
+          name: env-volume
+  volumes:
     - name: env-volume
       configMap:
         name: env-vars
