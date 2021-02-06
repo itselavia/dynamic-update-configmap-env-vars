@@ -57,10 +57,7 @@ func main() {
 					return
 				}
 				fmt.Println("event:", event)
-				if event.Op&fsnotify.Write == fsnotify.Write {
-					fmt.Println("modified file:", event.Name)
-					reloadEnvVars()
-				}
+				reloadEnvVars()
 			case err, ok := <-watcher.Errors:
 				if !ok {
 					fmt.Println("error from Watcher: ", err)
