@@ -10,7 +10,7 @@ spec:
       image: itselavia/dynamic-update-env
       envFrom:
       - configMapRef:
-        name: env-vars
+          name: env-vars
       volumeMounts:
       - mountPath: /config
         name: env-volume
