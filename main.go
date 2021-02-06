@@ -2,8 +2,11 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
+
+	"github.com/fsnotify/fsnotify"
 )
 
 func getEnvValue(w http.ResponseWriter, req *http.Request) {
@@ -18,7 +21,59 @@ func getEnvValue(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, value+"\n")
 }
 
+func reloadEnvVars() {
+
+	configDir := "/config/"
+	files, err := ioutil.ReadDir(configDir)
+	if err != nil {
+		fmt.Println("cannot read config dir ", err)
+		return
+	}
+	for _, file := range files {
+		key := file.Name()
+		filename := configDir + key
+		value, err := ioutil.ReadFile(filename)
+		if err != nil || string(value) == "" {
+			fmt.Println("Unable to read env variable: ", configDir+file.Name())
+			continue
+		}
+		os.Setenv(key, string(value))
+	}
+}
+
 func main() {
+
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		fmt.Println("cannot initialize Watcher ", err)
+	}
+	defer watcher.Close()
+
+	go func() {
+		for {
+			select {
+			case event, ok := <-watcher.Events:
+				if !ok {
+					return
+				}
+				fmt.Println("event:", event)
+				if event.Op&fsnotify.Write == fsnotify.Write {
+					fmt.Println("modified file:", event.Name)
+					reloadEnvVars()
+				}
+			case err, ok := <-watcher.Errors:
+				if !ok {
+					fmt.Println("error from Watcher: ", err)
+					return
+				}
+			}
+		}
+	}()
+
+	err = watcher.Add("/config/")
+	if err != nil {
+		fmt.Println("error adding directory to Watcher", err)
+	}
 
 	http.HandleFunc("/getEnvValue", getEnvValue)
 
